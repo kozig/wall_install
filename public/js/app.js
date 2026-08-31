@@ -26,6 +26,10 @@ const postal = document.getElementById('postal');
 const postalNote = document.getElementById('postal-note');
 const outField = document.getElementById('out_of_area');
 
+// Lets the server reject bot submissions that fire instantly, or stale
+// retries of a long-abandoned page load.
+document.getElementById('ts').value = Date.now();
+
 // ---- service-area (FSA) check ----
 function checkServiceArea() {
   const val = postal.value.trim();
@@ -77,12 +81,14 @@ form.addEventListener('submit', async (e) => {
   statusEl.hidden = true;
 
   try {
-    // Same-origin POST to the Pages Function — no CORS involved.
-    // TODO (Phase 3): switch to a JSON body once the Turnstile widget
-    // and functions/api/contact.js are wired up (see Deploy Static_Site.md).
+    // Same-origin JSON POST to the Pages Function — no CORS involved.
+    // Includes the honeypot (if a bot filled it), ts, and the
+    // cf-turnstile-response token the widget injects into the form.
+    const payload = Object.fromEntries(new FormData(form).entries());
     const res = await fetch(CONFIG.endpoint, {
       method: 'POST',
-      body: new FormData(form)
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
     });
     const json = await res.json();
     if (json.ok) showSuccess();
@@ -91,5 +97,6 @@ form.addEventListener('submit', async (e) => {
     showError();
     submitBtn.disabled = false;
     submitBtn.textContent = originalLabel;
+    if (window.turnstile) window.turnstile.reset();
   }
 });

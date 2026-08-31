@@ -23,6 +23,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://challenges.cloudflare.com">
+<!-- No SRI here on purpose: Cloudflare rotates this file server-side and
+     explicitly advises against pinning it with `integrity`. -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
 <link rel="stylesheet" href="/styles.css">
 </head>
@@ -160,8 +164,10 @@
         <form id="quote-form" novalidate>
           <!-- honeypot: bots fill this, humans don't -->
           <input type="checkbox" name="botcheck" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <!-- set automatically by the service-area check -->
+          <!-- set automatically by the service-area check (UX only — the server re-checks) -->
           <input type="hidden" name="out_of_area" id="out_of_area" value="no">
+          <!-- set on page load by app.js — lets the server reject "too fast"/stale submissions -->
+          <input type="hidden" name="ts" id="ts">
 
           <div class="row-2">
             <div class="field">
@@ -210,6 +216,8 @@
             <label for="request">Tell us about the job <span class="req">*</span></label>
             <textarea id="request" name="work_request" placeholder="e.g. 65&quot; TV on drywall over a fireplace, plus two mirrors in the hallway. Any wall type or timing details help." required></textarea>
           </div>
+
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAAEjMdJjm_thMGl00" data-theme="auto"></div>
 
           <div class="form-foot">
             <button type="submit" class="btn btn-primary">Send request</button>
