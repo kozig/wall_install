@@ -24,7 +24,7 @@
 
 const SHEET_NAME = 'wall_install_form_submissions';
 const NOTIFY_THRESHOLD = 5;
-const OWNER_EMAIL = 'REPLACE_ME@example.com'; // TODO: set before deploying
+const OWNER_EMAIL = 'gkoziol@gmail.com';
 
 // Neutralize CSV/formula injection: prefix a leading = + - @ (and tab/CR)
 // with an apostrophe, forcing Sheets to treat the value as literal text.

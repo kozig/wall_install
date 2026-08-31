@@ -1,1 +1,11 @@
-https://www.wallinstall.ca/*  https://wallinstall.ca/:splat  301
+# No redirects defined here. www -> apex canonicalization is handled by
+# a Cloudflare Redirect Rule at the zone level (dashboard -> Rules ->
+# Redirect Rules) once DNS is on Cloudflare, not by this file.
+#
+# An earlier version tried:
+#   https://www.wallinstall.ca/*  https://wallinstall.ca/:splat  301
+# which broke the build: "Invalid _redirects configuration: Line 1: Only
+# relative URLs are allowed. [code: 100324]". _redirects sources must be
+# relative paths, and even a relative-source rule here would apply to
+# every hostname this project serves (including the apex itself),
+# causing a redirect loop -- hence handling this at the zone level instead.
