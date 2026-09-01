@@ -11,7 +11,7 @@ const CONFIG = {
   // Service area: the FSAs (first 3 characters of a postal code)
   // you cover. EDIT THIS. Below are EXAMPLE Durham Region FSAs —
   // verify each one and adjust to the areas you actually serve.
-  serviceAreaFSAs: ['L1S','L1T','L1Z','L1V','L1W','L1X','L1Y','L1M','L1N','L1P','L1R','L1G','L1H','L1J','L1K','L1L','L1B','L1C','L1E'],
+  serviceAreaFSAs: ['L3B','L5V','L5C','L5T','L5R','L5A','L5B','L4Z','L6R','L5K','L5L','L5M','L4A','L4W','L5G','L5H','L4Y','L5N','L5W','L9E','L5E','L4X','M7R','L5J','L9X','L6L','L6J','L6H'],
 
   // true  → refuse out-of-area submissions
   // false → allow them, but flag the lead as out_of_area (default)
