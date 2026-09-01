@@ -1,5 +1,11 @@
+# The 'sha256-LB8...' entry in script-src below allowlists a small inline
+# script Turnstile's own JS injects into the page to bootstrap the widget.
+# Without it the widget silently never completes, /api/contact gets no
+# valid token, and every submission 403s. If Cloudflare updates the
+# Turnstile client and this starts failing again, the browser console
+# will print the new hash to use — swap it in here.
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-LB8DYx4VzyxTWrsqLUNZ4gAj+jQEEKXwLry+0ZiJTx4=' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; connect-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com
