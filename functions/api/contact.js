@@ -123,10 +123,24 @@ export async function onRequestPost({ request, env }) {
       body: JSON.stringify(forwardPayload),
       // fetch() follows the 302 Apps Script issues automatically.
     });
-    const gsData = await gs.json();
+    // TEMP DEBUG (remove once the 502 is resolved): log what Apps Script
+    // actually sent back, since the catch below otherwise hides it behind
+    // a generic 'backend-unavailable'. Body is truncated, never logs secrets.
+    const gsText = await gs.text();
+    console.log('apps-script response', {
+      status: gs.status,
+      bodyPreview: gsText.slice(0, 500),
+    });
+    let gsData;
+    try {
+      gsData = JSON.parse(gsText);
+    } catch {
+      throw new Error('apps-script-non-json-response');
+    }
     if (!gsData.ok) throw new Error(gsData.error || 'apps-script-failed');
     return json({ ok: true, id: gsData.id });
   } catch (err) {
+    console.log('apps-script forward failed', { message: String(err) });
     // TODO (Phase 4): write to a KV fallback here so a down/misconfigured
     // Apps Script never silently loses a submitted lead.
     return json({ ok: false, error: 'backend-unavailable' }, 502);
