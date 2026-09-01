@@ -1,9 +1,13 @@
-// Cloudflare Pages Function — same-origin contact-form receiver.
-// Re-validates everything server-side (the client checks are UX only).
+// Same-origin contact-form handler. Not auto-routed — src/index.js's
+// Worker fetch handler calls onRequestPost() directly for POST /api/contact
+// (see wrangler.toml / src/index.js; this project deploys as a Workers
+// Builds project, not classic Pages, so the functions/ folder convention
+// alone does nothing). Re-validates everything server-side — the client
+// checks in public/js/app.js are UX only.
 //
-// Secrets this function needs (set via `wrangler pages secret put <NAME>`
-// or the Pages dashboard → Settings → Environment variables, as *Secret*,
-// for both Production and Preview):
+// env.TURNSTILE_SECRET / env.APPS_SCRIPT_URL / env.SHARED_SECRET come from
+// the Cloudflare dashboard: Workers & Pages → wall-install → Settings →
+// Variables and Secrets. Nothing in this repo sets them.
 //   TURNSTILE_SECRET  — from Cloudflare dashboard → Turnstile → your widget
 //   APPS_SCRIPT_URL   — the Apps Script Web App's /exec URL (Phase 2)
 //   SHARED_SECRET     — a long random string, matching Script Properties
@@ -70,6 +74,16 @@ export async function onRequestPost({ request, env }) {
 
   const fsa = postal.replace(/\s+/g, '').slice(0, 3);
   const outOfArea = SERVICE_AREA.has(fsa) ? 'no' : 'yes';
+
+  // TEMP DEBUG (remove once the captcha 403 is resolved): confirms the
+  // Cloudflare secrets are actually bound to this deployment, without
+  // ever logging their values. Check via dashboard → wall-install → Logs,
+  // or `wrangler tail`, while submitting the form.
+  console.log('env binding check', {
+    hasTurnstileSecret: !!env.TURNSTILE_SECRET,
+    hasSharedSecret: !!env.SHARED_SECRET,
+    hasAppsScriptUrl: !!env.APPS_SCRIPT_URL,
+  });
 
   // Turnstile server-side verification — the widget's checkmark is UX
   // only, this call is the actual security boundary.
