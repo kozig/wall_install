@@ -5,10 +5,15 @@
 // alone does nothing). Re-validates everything server-side — the client
 // checks in public/js/app.js are UX only.
 //
-// env.TURNSTILE_SECRET / env.APPS_SCRIPT_URL / env.SHARED_SECRET come from
-// the Cloudflare dashboard: Workers & Pages → wall-install → Settings →
-// Variables and Secrets. Nothing in this repo sets them.
-//   TURNSTILE_SECRET  — from Cloudflare dashboard → Turnstile → your widget
+// env.TURNSTILE_SECRET / env.APPS_SCRIPT_URL / env.SHARED_SECRET must be
+// set via `npx wrangler secret put <NAME>` (from the repo root, so it
+// picks up wrangler.toml's project name) — NOT the dashboard's "Runtime
+// Variables and Secrets" UI. On this project (a git-connected Workers
+// Builds deployment with a wrangler.toml checked in), dashboard-set vars
+// silently never reach `env`; only `wrangler secret put` actually binds.
+// Verify what's bound with `wrangler secret list` (names only, no values).
+// Nothing in this repo sets them — get the values from:
+//   TURNSTILE_SECRET  — Cloudflare dashboard → Turnstile → your widget
 //   APPS_SCRIPT_URL   — the Apps Script Web App's /exec URL (Phase 2)
 //   SHARED_SECRET     — a long random string, matching Script Properties
 //                        SHARED_SECRET in the Apps Script project
@@ -75,16 +80,6 @@ export async function onRequestPost({ request, env }) {
   const fsa = postal.replace(/\s+/g, '').slice(0, 3);
   const outOfArea = SERVICE_AREA.has(fsa) ? 'no' : 'yes';
 
-  // TEMP DEBUG (remove once the captcha 403 is resolved): confirms the
-  // Cloudflare secrets are actually bound to this deployment, without
-  // ever logging their values. Check via dashboard → wall-install → Logs,
-  // or `wrangler tail`, while submitting the form.
-  console.log('env binding check', {
-    hasTurnstileSecret: !!env.TURNSTILE_SECRET,
-    hasSharedSecret: !!env.SHARED_SECRET,
-    hasAppsScriptUrl: !!env.APPS_SCRIPT_URL,
-  });
-
   // Turnstile server-side verification — the widget's checkmark is UX
   // only, this call is the actual security boundary.
   const tsForm = new FormData();
@@ -123,14 +118,10 @@ export async function onRequestPost({ request, env }) {
       body: JSON.stringify(forwardPayload),
       // fetch() follows the 302 Apps Script issues automatically.
     });
-    // TEMP DEBUG (remove once the 502 is resolved): log what Apps Script
-    // actually sent back, since the catch below otherwise hides it behind
-    // a generic 'backend-unavailable'. Body is truncated, never logs secrets.
+    // Apps Script can 404/error-page instead of returning JSON (e.g. a
+    // stale /exec URL) — parse defensively rather than letting that throw
+    // an unhelpful "Unexpected token <" from JSON.parse.
     const gsText = await gs.text();
-    console.log('apps-script response', {
-      status: gs.status,
-      bodyPreview: gsText.slice(0, 500),
-    });
     let gsData;
     try {
       gsData = JSON.parse(gsText);
@@ -140,6 +131,9 @@ export async function onRequestPost({ request, env }) {
     if (!gsData.ok) throw new Error(gsData.error || 'apps-script-failed');
     return json({ ok: true, id: gsData.id });
   } catch (err) {
+    // Logged (never includes lead data) so a future 502 is diagnosable
+    // from the Cloudflare dashboard's Logs tab or `wrangler tail` without
+    // re-adding debug statements.
     console.log('apps-script forward failed', { message: String(err) });
     // TODO (Phase 4): write to a KV fallback here so a down/misconfigured
     // Apps Script never silently loses a submitted lead.
